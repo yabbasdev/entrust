@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust\Contracts;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust\Contracts;
 
 /**
  * This file is part of Entrust,

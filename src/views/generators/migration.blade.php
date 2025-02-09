@@ -1,4 +1,6 @@
-<?php echo '<?php' ?>
+<?php declare(strict_types=1);
+
+echo '<?php' ?>
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

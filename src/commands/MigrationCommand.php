@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust;
 
 /**
  * This file is part of Entrust,
@@ -29,10 +33,8 @@ class MigrationCommand extends Command
 
     /**
      * Execute the console command for Laravel 5.5+.
-     *
-     * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $this->laravel->view->addNamespace('entrust', substr(__DIR__, 0, -8).'views');
 
@@ -42,9 +44,9 @@ class MigrationCommand extends Command
         $permissionRoleTable = Config::get('entrust.permission_role_table');
 
         $this->line('');
-        $this->info( "Tables: $rolesTable, $roleUserTable, $permissionsTable, $permissionRoleTable" );
+        $this->info( sprintf('Tables: %s, %s, %s, %s', $rolesTable, $roleUserTable, $permissionsTable, $permissionRoleTable) );
 
-        $message = "A migration that creates '$rolesTable', '$roleUserTable', '$permissionsTable', '$permissionRoleTable'".
+        $message = sprintf("A migration that creates '%s', '%s', '%s', '%s'", $rolesTable, $roleUserTable, $permissionsTable, $permissionRoleTable).
         " tables will be created in database/migrations directory";
 
         $this->comment($message);
@@ -74,10 +76,8 @@ class MigrationCommand extends Command
      * Create the migration.
      *
      * @param string $name
-     *
-     * @return bool
      */
-    protected function createMigration($rolesTable, $roleUserTable, $permissionsTable, $permissionRoleTable)
+    protected function createMigration($rolesTable, $roleUserTable, $permissionsTable, $permissionRoleTable): bool
     {
         $migrationFile = base_path("/database/migrations")."/".date('Y_m_d_His')."_entrust_setup_tables.php";
 
@@ -86,12 +86,12 @@ class MigrationCommand extends Command
         $usersTable = $userModel->getTable();
         $userKeyName = $userModel->getKeyName();
 
-        $data = compact('rolesTable', 'roleUserTable', 'permissionsTable', 'permissionRoleTable', 'usersTable', 'userKeyName');
+        $data = ['rolesTable' => $rolesTable, 'roleUserTable' => $roleUserTable, 'permissionsTable' => $permissionsTable, 'permissionRoleTable' => $permissionRoleTable, 'usersTable' => $usersTable, 'userKeyName' => $userKeyName];
 
         $output = $this->laravel->view->make('entrust::generators.migration')->with($data)->render();
 
         if (!file_exists($migrationFile) && $fs = fopen($migrationFile, 'x')) {
-            fwrite($fs, $output);
+            fwrite($fs, (string) $output);
             fclose($fs);
             return true;
         }

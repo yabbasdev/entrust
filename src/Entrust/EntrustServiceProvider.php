@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust;
 
 /**
  * This file is part of Entrust,
@@ -22,10 +26,8 @@ class EntrustServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap the application events.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         // Publish config files
         $this->publishes([
@@ -41,10 +43,9 @@ class EntrustServiceProvider extends ServiceProvider
 
     /**
      * Register the service provider.
-     *
-     * @return void
      */
-    public function register()
+    #[\Override]
+    public function register(): void
     {
         $this->registerEntrust();
 
@@ -55,73 +56,51 @@ class EntrustServiceProvider extends ServiceProvider
 
     /**
      * Register the blade directives
-     *
-     * @return void
      */
-    private function bladeDirectives()
+    private function bladeDirectives(): void
     {
-        if (!class_exists('\Blade')) return;
+        if (!class_exists('\Blade')) {
+            return;
+        }
 
         // Call to Entrust::hasRole
-        Blade::directive('role', function($expression) {
-            return "<?php if (\\Entrust::hasRole({$expression})) : ?>";
-        });
+        Blade::directive('role', fn($expression): string => sprintf('<?php if (\Entrust::hasRole(%s)) : ?>', $expression));
 
-        Blade::directive('endrole', function($expression) {
-            return "<?php endif; // Entrust::hasRole ?>";
-        });
+        Blade::directive('endrole', fn($expression): string => "<?php endif; // Entrust::hasRole ?>");
 
         // Call to Entrust::can
-        Blade::directive('permission', function($expression) {
-            return "<?php if (\\Entrust::can({$expression})) : ?>";
-        });
+        Blade::directive('permission', fn($expression): string => sprintf('<?php if (\Entrust::can(%s)) : ?>', $expression));
 
-        Blade::directive('endpermission', function($expression) {
-            return "<?php endif; // Entrust::can ?>";
-        });
+        Blade::directive('endpermission', fn($expression): string => "<?php endif; // Entrust::can ?>");
 
         // Call to Entrust::ability
-        Blade::directive('ability', function($expression) {
-            return "<?php if (\\Entrust::ability({$expression})) : ?>";
-        });
+        Blade::directive('ability', fn($expression): string => sprintf('<?php if (\Entrust::ability(%s)) : ?>', $expression));
 
-        Blade::directive('endability', function($expression) {
-            return "<?php endif; // Entrust::ability ?>";
-        });
+        Blade::directive('endability', fn($expression): string => "<?php endif; // Entrust::ability ?>");
     }
 
     /**
      * Register the application bindings.
-     *
-     * @return void
      */
-    private function registerEntrust()
+    private function registerEntrust(): void
     {
-        $this->app->bind('entrust', function ($app) {
-            return new Entrust($app);
-        });
+        $this->app->bind('entrust', fn($app): \Trebol\Entrust\Entrust => new Entrust($app));
 
-        $this->app->alias('entrust', 'Trebol\Entrust\Entrust');
+        $this->app->alias('entrust', \Trebol\Entrust\Entrust::class);
     }
 
     /**
      * Register the artisan commands.
-     *
-     * @return void
      */
-    private function registerCommands()
+    private function registerCommands(): void
     {
-        $this->app->singleton('command.entrust.migration', function ($app) {
-            return new MigrationCommand();
-        });
+        $this->app->singleton('command.entrust.migration', fn($app): \Trebol\Entrust\MigrationCommand => new MigrationCommand());
     }
 
     /**
      * Merges user's and entrust's configs.
-     *
-     * @return void
      */
-    private function mergeConfig()
+    private function mergeConfig(): void
     {
         $this->mergeConfigFrom(
             __DIR__.'/../config/config.php', 'entrust'
@@ -133,6 +112,7 @@ class EntrustServiceProvider extends ServiceProvider
      *
      * @return array
      */
+    #[\Override]
     public function provides()
     {
         return [

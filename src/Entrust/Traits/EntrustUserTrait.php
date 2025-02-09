@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust\Traits;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust\Traits;
 
 /**
  * This file is part of Entrust,
@@ -26,11 +30,11 @@ trait EntrustUserTrait
         $userPrimaryKey = $this->primaryKey;
         $cacheKey = 'entrust_roles_for_user_'.$this->$userPrimaryKey;
         if(Cache::getStore() instanceof TaggableStore) {
-            return Cache::tags(Config::get('entrust.role_user_table'))->remember($cacheKey, Config::get('cache.ttl'), function () {
-                return $this->roles()->get();
-            });
+            return Cache::tags(Config::get('entrust.role_user_table'))->remember($cacheKey, Config::get('cache.ttl'), fn() => $this->roles()->get());
         }
-        else return $this->roles()->get();
+        else {
+            return $this->roles()->get();
+        }
     }
 
     /**
@@ -41,6 +45,7 @@ trait EntrustUserTrait
         if(Cache::getStore() instanceof TaggableStore) {
             Cache::tags(Config::get('entrust.role_user_table'))->flush();
         }
+
         return parent::save($options);
     }
 
@@ -53,6 +58,7 @@ trait EntrustUserTrait
         if(Cache::getStore() instanceof TaggableStore) {
             Cache::tags(Config::get('entrust.role_user_table'))->flush();
         }
+
         return $result;
     }
 
@@ -65,6 +71,7 @@ trait EntrustUserTrait
         if(Cache::getStore() instanceof TaggableStore) {
             Cache::tags(Config::get('entrust.role_user_table'))->flush();
         }
+
         return $result;
     }
 
@@ -82,14 +89,12 @@ trait EntrustUserTrait
      * Boot the user model
      * Attach event listener to remove the many-to-many records when trying to delete
      * Will NOT delete any records if the user model uses soft deletes.
-     *
-     * @return void|bool
      */
-    public static function boot()
+    public static function boot(): void
     {
         parent::boot();
 
-        static::deleting(function($user) {
+        static::deleting(function($user): true {
             if (!method_exists(Config::get('auth.providers.users.model'), 'bootSoftDeletes')) {
                 $user->roles()->sync([]);
             }
@@ -181,15 +186,14 @@ trait EntrustUserTrait
      * @param array        $options     validate_all (true|false) or return_type (boolean|array|both)
      *
      * @throws \InvalidArgumentException
-     *
-     * @return array|bool
      */
-    public function ability($roles, $permissions, $options = [])
+    public function ability($roles, $permissions, array $options = []): bool|array
     {
         // Convert string to array if that's what is passed in.
         if (!is_array($roles)) {
             $roles = explode(',', $roles);
         }
+
         if (!is_array($permissions)) {
             $permissions = explode(',', $permissions);
         }
@@ -197,19 +201,16 @@ trait EntrustUserTrait
         // Set up default values and validate options.
         if (!isset($options['validate_all'])) {
             $options['validate_all'] = false;
-        } else {
-            if ($options['validate_all'] !== true && $options['validate_all'] !== false) {
-                throw new InvalidArgumentException();
-            }
+        } elseif ($options['validate_all'] !== true && $options['validate_all'] !== false) {
+            throw new InvalidArgumentException();
         }
+
         if (!isset($options['return_type'])) {
             $options['return_type'] = 'boolean';
-        } else {
-            if ($options['return_type'] != 'boolean' &&
-                $options['return_type'] != 'array' &&
-                $options['return_type'] != 'both') {
-                throw new InvalidArgumentException();
-            }
+        } elseif ($options['return_type'] != 'boolean' &&
+            $options['return_type'] != 'array' &&
+            $options['return_type'] != 'both') {
+            throw new InvalidArgumentException();
         }
 
         // Loop through roles and permissions and check each.
@@ -218,6 +219,7 @@ trait EntrustUserTrait
         foreach ($roles as $role) {
             $checkedRoles[$role] = $this->hasRole($role);
         }
+
         foreach ($permissions as $permission) {
             $checkedPermissions[$permission] = $this->cans($permission);
         }
@@ -225,7 +227,7 @@ trait EntrustUserTrait
         // If validate all and there is a false in either
         // Check that if validate all, then there should not be any false.
         // Check that if not validate all, there must be at least one true.
-        if(($options['validate_all'] && !(in_array(false,$checkedRoles) || in_array(false,$checkedPermissions))) ||
+        if(($options['validate_all'] && (!in_array(false,$checkedRoles) && !in_array(false,$checkedPermissions))) ||
             (!$options['validate_all'] && (in_array(true,$checkedRoles) || in_array(true,$checkedPermissions)))) {
             $validateAll = true;
         } else {
@@ -248,7 +250,7 @@ trait EntrustUserTrait
      *
      * @param mixed $role
      */
-    public function attachRole($role)
+    public function attachRole($role): void
     {
         if(is_object($role)) {
             $role = $role->getKey();
@@ -266,7 +268,7 @@ trait EntrustUserTrait
      *
      * @param mixed $role
      */
-    public function detachRole($role)
+    public function detachRole($role): void
     {
         if (is_object($role)) {
             $role = $role->getKey();
@@ -284,7 +286,7 @@ trait EntrustUserTrait
      *
      * @param mixed $roles
      */
-    public function attachRoles($roles)
+    public function attachRoles($roles): void
     {
         foreach ($roles as $role) {
             $this->attachRole($role);
@@ -296,9 +298,11 @@ trait EntrustUserTrait
      *
      * @param mixed $roles
      */
-    public function detachRoles($roles=null)
+    public function detachRoles($roles=null): void
     {
-        if (!$roles) $roles = $this->roles()->get();
+        if (!$roles) {
+            $roles = $this->roles()->get();
+        }
 
         foreach ($roles as $role) {
             $this->detachRole($role);
@@ -313,7 +317,7 @@ trait EntrustUserTrait
      */
     public function scopeWithRole($query, $role)
     {
-        return $query->whereHas('roles', function ($query) use ($role)
+        return $query->whereHas('roles', function ($query) use ($role): void
         {
             $query->where('name', $role);
         });

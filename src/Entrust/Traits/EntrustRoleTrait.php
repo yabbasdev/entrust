@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust\Traits;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust\Traits;
 
 /**
  * This file is part of Entrust,
@@ -20,42 +24,48 @@ trait EntrustRoleTrait
         $rolePrimaryKey = $this->primaryKey;
         $cacheKey = 'entrust_permissions_for_role_' . $this->$rolePrimaryKey;
         if (Cache::getStore() instanceof TaggableStore) {
-            return Cache::tags(Config::get('entrust.permission_role_table'))->remember($cacheKey, Config::get('cache.ttl', 60), function () {
-                return $this->perms()->get();
-            });
-        } else return $this->perms()->get();
+            return Cache::tags(Config::get('entrust.permission_role_table'))->remember($cacheKey, Config::get('cache.ttl', 60), fn() => $this->perms()->get());
+        } else {
+            return $this->perms()->get();
+        }
     }
 
-    public function save(array $options = [])
+    public function save(array $options = []): bool
     {   //both inserts and updates
         if (!parent::save($options)) {
             return false;
         }
+
         if (Cache::getStore() instanceof TaggableStore) {
             Cache::tags(Config::get('entrust.permission_role_table'))->flush();
         }
+
         return true;
     }
 
-    public function delete(array $options = [])
+    public function delete(array $options = []): bool
     {   //soft or hard
         if (!parent::delete($options)) {
             return false;
         }
+
         if (Cache::getStore() instanceof TaggableStore) {
             Cache::tags(Config::get('entrust.permission_role_table'))->flush();
         }
+
         return true;
     }
 
-    public function restore()
+    public function restore(): bool
     {   //soft delete undo's
         if (!parent::restore()) {
             return false;
         }
+
         if (Cache::getStore() instanceof TaggableStore) {
             Cache::tags(Config::get('entrust.permission_role_table'))->flush();
         }
+
         return true;
     }
 
@@ -84,14 +94,12 @@ trait EntrustRoleTrait
      * Boot the role model
      * Attach event listener to remove the many-to-many records when trying to delete
      * Will NOT delete any records if the role model uses soft deletes.
-     *
-     * @return void|bool
      */
-    public static function boot()
+    public static function boot(): void
     {
         parent::boot();
 
-        static::deleting(function ($role) {
+        static::deleting(function ($role): true {
             if (!method_exists(Config::get('entrust.role'), 'bootSoftDeletes')) {
                 $role->users()->sync([]);
                 $role->perms()->sync([]);
@@ -141,10 +149,8 @@ trait EntrustRoleTrait
      * Save the inputted permissions.
      *
      * @param mixed $inputPermissions
-     *
-     * @return void
      */
-    public function savePermissions($inputPermissions)
+    public function savePermissions($inputPermissions): void
     {
         if (!empty($inputPermissions)) {
             $this->perms()->sync($inputPermissions);
@@ -175,6 +181,7 @@ trait EntrustRoleTrait
         }
 
         $this->perms()->attach($permission);
+        return null;
     }
 
     /**
@@ -195,16 +202,15 @@ trait EntrustRoleTrait
         }
 
         $this->perms()->detach($permission);
+        return null;
     }
 
     /**
      * Attach multiple permissions to current role.
      *
      * @param mixed $permissions
-     *
-     * @return void
      */
-    public function attachPermissions($permissions)
+    public function attachPermissions($permissions): void
     {
         foreach ($permissions as $permission) {
             $this->attachPermission($permission);
@@ -215,12 +221,12 @@ trait EntrustRoleTrait
      * Detach multiple permissions from current role
      *
      * @param mixed $permissions
-     *
-     * @return void
      */
-    public function detachPermissions($permissions = null)
+    public function detachPermissions($permissions = null): void
     {
-        if (!$permissions) $permissions = $this->perms()->get();
+        if (!$permissions) {
+            $permissions = $this->perms()->get();
+        }
 
         foreach ($permissions as $permission) {
             $this->detachPermission($permission);

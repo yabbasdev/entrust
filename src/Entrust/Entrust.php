@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust;
 
 /**
  * This class is the main entry point of entrust. Usually the interaction
@@ -99,10 +103,8 @@ class Entrust
      * @param array|string $roles      The role(s) needed
      * @param mixed        $result     i.e: Redirect::to('/')
      * @param bool         $requireAll User must have all roles
-     *
-     * @return mixed
      */
-    public function routeNeedsRole($route, $roles, $result = null, $requireAll = true)
+    public function routeNeedsRole($route, $roles, $result = null, $requireAll = true): void
     {
         $filterName  = is_array($roles) ? implode('_', $roles) : $roles;
         $filterName .= '_'.substr(md5($route), 0, 6);
@@ -133,10 +135,8 @@ class Entrust
      * @param array|string $permissions The permission(s) needed
      * @param mixed        $result      i.e: Redirect::to('/')
      * @param bool         $requireAll  User must have all permissions
-     *
-     * @return mixed
      */
-    public function routeNeedsPermission($route, $permissions, $result = null, $requireAll = true)
+    public function routeNeedsPermission($route, $permissions, $result = null, $requireAll = true): void
     {
         $filterName  = is_array($permissions) ? implode('_', $permissions) : $permissions;
         $filterName .= '_'.substr(md5($route), 0, 6);
@@ -168,10 +168,8 @@ class Entrust
      * @param array|string $permissions The permission(s) needed
      * @param mixed        $result      i.e: Redirect::to('/')
      * @param bool         $requireAll  User must have all roles and permissions
-     *
-     * @return void
      */
-    public function routeNeedsRoleOrPermission($route, $roles, $permissions, $result = null, $requireAll = false)
+    public function routeNeedsRoleOrPermission($route, $roles, $permissions, $result = null, $requireAll = false): void
     {
         $filterName  =      is_array($roles)       ? implode('_', $roles)       : $roles;
         $filterName .= '_'.(is_array($permissions) ? implode('_', $permissions) : $permissions);
@@ -181,11 +179,7 @@ class Entrust
             $hasRole  = $this->hasRole($roles, $requireAll);
             $hasPerms = $this->can($permissions, $requireAll);
 
-            if ($requireAll) {
-                $hasRolePerm = $hasRole && $hasPerms;
-            } else {
-                $hasRolePerm = $hasRole || $hasPerms;
-            }
+            $hasRolePerm = $requireAll ? $hasRole && $hasPerms : $hasRole || $hasPerms;
 
             if (!$hasRolePerm) {
                 return empty($result) ? $this->app->abort(403) : $result;

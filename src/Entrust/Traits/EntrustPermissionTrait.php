@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust\Traits;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust\Traits;
 
 /**
  * This file is part of Entrust,
@@ -26,14 +30,12 @@ trait EntrustPermissionTrait
      * Boot the permission model
      * Attach event listener to remove the many-to-many records when trying to delete
      * Will NOT delete any records if the permission model uses soft deletes.
-     *
-     * @return void|bool
      */
-    public static function boot()
+    public static function boot(): void
     {
         parent::boot();
 
-        static::deleting(function($permission) {
+        static::deleting(function($permission): true {
             if (!method_exists(Config::get('entrust.permission'), 'bootSoftDeletes')) {
                 $permission->roles()->sync([]);
             }

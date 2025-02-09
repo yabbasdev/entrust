@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust;
 
 /**
  * This file is part of Entrust,

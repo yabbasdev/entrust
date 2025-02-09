@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust;
 
 /**
  * This file is part of Entrust,
@@ -26,8 +30,6 @@ class EntrustPermission extends Model implements EntrustPermissionInterface
 
     /**
      * Creates a new instance of the model.
-     *
-     * @param array $attributes
      */
     public function __construct(array $attributes = [])
     {

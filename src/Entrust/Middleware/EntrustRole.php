@@ -1,4 +1,8 @@
-<?php namespace Trebol\Entrust\Middleware;
+<?php
+
+declare(strict_types=1);
+
+namespace Trebol\Entrust\Middleware;
 
 /**
  * This file is part of Entrust,
@@ -17,37 +21,30 @@ class EntrustRole
 {
 	const DELIMITER = '|';
 
-	protected $auth;
+	/**
+     * Creates a new instance of the middleware.
+     */
+    public function __construct(protected \Illuminate\Contracts\Auth\Guard $guard)
+    {
+    }
 
 	/**
-	 * Creates a new instance of the middleware.
-	 *
-	 * @param Guard $auth
-	 */
-	public function __construct(Guard $auth)
-	{
-		$this->auth = $auth;
-	}
-
-	/**
-	 * Handle an incoming request.
-	 *
-	 * @param  \Illuminate\Http\Request $request
-	 * @param  Closure $next
-	 * @param  $roles
-	 * @return mixed
-	 */
-	public function handle($request, Closure $next, $roles)
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  $roles
+     * @return mixed
+     */
+    public function handle($request, Closure $next, $roles)
 	{
 		if (!is_array($roles)) {
-			$roles = explode(self::DELIMITER, $roles);
+			$roles = explode(self::DELIMITER, (string) $roles);
 		}
 
-		if ($this->auth->guest() || !$request->user()->hasRole($roles)) {
+		if ($this->guard->guest() || !$request->user()->hasRole($roles)) {
             switch (Config::get('entrust.type')) {
                 case 'api':
                     return response()->json(Config::get('entrust.response-error'),403);
-                    break;
                 default:
                     abort(403);
                     break;
